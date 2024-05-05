@@ -3,41 +3,13 @@ const app = express();
 const { Server } = require('socket.io')
 const http = require('http')
 const cors = require('cors')
+const {client,database} = require('./db')
 app.use(cors());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-// const uri = "mongodb+srv://junemuk:<password>@cluster0.deeugr7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
-
-async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
-  }
-}
-run().catch(console.dir);
 
 async function insertDocument(collectionName, document) {
-  const client = new MongoClient(uri);
-
   try {
-    const database = client.db('moon-discord');
     const collection = database.collection(collectionName); // 사용할 컬렉션 이름
-
-    // 데이터 생성
     const result = await collection.insertOne(document);
     console.log(`Inserted document with _id: ${result.insertedId}`);
   } finally {
@@ -53,6 +25,20 @@ async function getDocuments(collectionName, query) {
     const collection = database.collection(collectionName); // 사용할 컬렉션 이름
 
     const result = await collection.findOne(query);
+    return result;
+  } finally {
+    client.close();
+  }
+}
+
+async function updataeDocuments(collectionName, query) {
+  const client = new MongoClient(uri);
+
+  try {
+    const database = client.db('moon-discord');
+    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
+
+    const result = await collection.updateOne(query);
     return result;
   } finally {
     client.close();
@@ -82,30 +68,65 @@ io.on("connection", (socket) => {
 
   socket.on('user', async (data) => {
     const { name } = data;
+    if (name == null) return 0;
     const result = await getDocuments('User', { name: name })
-    if(result == null){
+    if (result == null) {
       const newUser = {
         name: name,
         friends: [],
         ChattingRooms: [],
       }
       await insertDocument('User', newUser);
-      socket.emit('User',newUser);
+      socket.emit('User', newUser);
     }
-    else{
-      socket.emit('User',result);
+    else {
+      socket.emit('User', result);
     }
   })
 
-  socket.on('message', (data) => {
-    console.log(data);
-    // insertDocument(data);
+  socket.on('friend', async (data) => {
+    const { userId, friendId } = data;
+    if (friendId == null) return 0;
+    const result = await getDocuments('User', { friends: friendId })
+    if (result == null) {
+      const newFriend = await getDocuments('User', { _id: friendId });
+      await updataeDocuments('User',
+        { id: userId },
+        {
+          $push: {
+            friends: newFriend
+          }
+        }
+      )
+      socket.emit('friend', newFriend);
+    }
+  })
+
+  socket.on('message', async (data) => {
+    const { roomId, message } = data;
+    if (message == null) return 0;
+
+    await updataeDocuments('ChattingRoom',
+    {_id:roomId},
+    {
+      $push:{
+        roomMessage: message
+      }
+    }
+  )
     socket.broadcast.emit('message', data);
   })
 
-  socket.on('channel', (data) => {
+  socket.on('channel', async (data) => {
     const { name } = data;
-
+    if(name == null) return 0;
+    await insertDocument('ChattingRoom',{
+      roomName:name,
+      roomParticipant:[],
+      roomMessage:[],
+    })
+    socket.emit('channel','channel is created')
+    
   })
 });
 
