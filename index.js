@@ -114,6 +114,7 @@ io.on("connection", (socket) => {
 
 async function insertDocument(collectionName, document) {
   try {
+    const database = client.db('moon-discord');
     const collection = database.collection(collectionName); // 사용할 컬렉션 이름
     const result = await collection.insertOne(document);
     console.log(`Inserted document with _id: ${result.insertedId}`);
