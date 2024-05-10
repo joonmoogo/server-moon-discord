@@ -3,51 +3,32 @@ const app = express();
 const { Server } = require('socket.io')
 const http = require('http')
 const cors = require('cors')
-const {client,database} = require('./db')
+const { MongoClient, ServerApiVersion } = require('mongodb');
+
 app.use(cors());
 
-
-async function insertDocument(collectionName, document) {
+const uri = "mongodb+srv://junemuk:1998born@cluster0.deeugr7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const client = new MongoClient(uri, {serverApi: {version: ServerApiVersion.v1,strict: true,deprecationErrors: true,}})
+async function mongoRun() {
   try {
-    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
-    const result = await collection.insertOne(document);
-    console.log(`Inserted document with _id: ${result.insertedId}`);
-  } finally {
-    client.close();
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } catch {
+    throw new Error('App can not connect to database');
+  }
+  finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
   }
 }
-
-async function getDocuments(collectionName, query) {
-  const client = new MongoClient(uri);
-
-  try {
-    const database = client.db('moon-discord');
-    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
-
-    const result = await collection.findOne(query);
-    return result;
-  } finally {
-    client.close();
-  }
-}
-
-async function updataeDocuments(collectionName, query) {
-  const client = new MongoClient(uri);
-
-  try {
-    const database = client.db('moon-discord');
-    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
-
-    const result = await collection.updateOne(query);
-    return result;
-  } finally {
-    client.close();
-  }
-}
+mongoRun();
 
 const server = http.createServer(app);
 server.listen(3001, () => {
-  console.log("SERVER IS RUNNING");
+  console.log("SERVER IS RUNNING ON PORT 3001");
 });
 
 const io = new Server(server, {
@@ -107,26 +88,64 @@ io.on("connection", (socket) => {
     if (message == null) return 0;
 
     await updataeDocuments('ChattingRoom',
-    {_id:roomId},
-    {
-      $push:{
-        roomMessage: message
+      { _id: roomId },
+      {
+        $push: {
+          roomMessage: message
+        }
       }
-    }
-  )
+    )
     socket.broadcast.emit('message', data);
   })
 
   socket.on('channel', async (data) => {
     const { name } = data;
-    if(name == null) return 0;
-    await insertDocument('ChattingRoom',{
-      roomName:name,
-      roomParticipant:[],
-      roomMessage:[],
+    if (name == null) return 0;
+    await insertDocument('ChattingRoom', {
+      roomName: name,
+      roomParticipant: [],
+      roomMessage: [],
     })
-    socket.emit('channel','channel is created')
-    
+    socket.emit('channel', 'channel is created')
+
   })
 });
 
+
+async function insertDocument(collectionName, document) {
+  try {
+    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
+    const result = await collection.insertOne(document);
+    console.log(`Inserted document with _id: ${result.insertedId}`);
+  } finally {
+    client.close();
+  }
+}
+
+async function getDocuments(collectionName, query) {
+  const client = new MongoClient(uri);
+
+  try {
+    const database = client.db('moon-discord');
+    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
+
+    const result = await collection.findOne(query);
+    return result;
+  } finally {
+    client.close();
+  }
+}
+
+async function updataeDocuments(collectionName, query) {
+  const client = new MongoClient(uri);
+
+  try {
+    const database = client.db('moon-discord');
+    const collection = database.collection(collectionName); // 사용할 컬렉션 이름
+
+    const result = await collection.updateOne(query);
+    return result;
+  } finally {
+    client.close();
+  }
+}
