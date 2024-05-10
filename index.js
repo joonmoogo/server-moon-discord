@@ -101,13 +101,13 @@ io.on("connection", (socket) => {
   socket.on('channel', async (data) => {
     const { name } = data;
     if (name == null) return 0;
-    await insertDocument('ChattingRoom', {
+    const data = {
       roomName: name,
       roomParticipant: [],
       roomMessage: [],
-    })
-    socket.emit('channel', 'channel is created')
-
+    }
+    await insertDocument('ChattingRoom',data)
+    socket.emit('channel', data)
   })
 });
 
