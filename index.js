@@ -205,7 +205,7 @@ const findChannel = async (channelName) => {
         })
         /*친구 있는 경우 */
         if(serverData){
-          socket.emit('alreadyFreind');
+          socket.emit('friendComplete',"friend already exists");
         }
         /*친구 없는 경우 */
         else{
