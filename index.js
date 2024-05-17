@@ -7,7 +7,7 @@ require("dotenv").config();
 app.use(cors());
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = process.env.DEV_DB_URL;// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const uri = "mongodb+srv://junemuk:1998born@cluster0.deeugr7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -89,11 +89,8 @@ io.on("connection", (socket) => {
    friends:[] //유저 친구들 
 
    collection name = 'User'
- 
+
   */
-
-
-
   const findUser = async (username) => {
     const client = new MongoClient(uri);
     try {
@@ -171,6 +168,7 @@ io.on("connection", (socket) => {
   // await db에서 채널이름 찾아서 channelUsers 배열에 유저 추가
   // await db에서 유저이름 찾아서 userChannel 배열에 채널 추가
   // await db에서 채널정보 channelName,chattingUsers,chattingLogs 찾아서 socket.emit('channeljoin',데이터)
+  
   socket.on('channelJoin', async (data) => {
     const { username, channelName } = data;
     const client = new MongoClient(uri);
@@ -256,6 +254,7 @@ io.on("connection", (socket) => {
       client.close();
     }
   });
+
   // socket.on('message');
   // 메세지 전달
   // parameter = {username:string, userMessage:string, channel:string}
