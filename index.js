@@ -193,6 +193,23 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on('getChannel',async(data)=>{
+    const {channelName} = data;
+    console.log(channelName);
+    const client = new MongoClient(uri);
+
+    try{
+      await client.connect();
+      const database = client.db('moon-discord');
+      const channelCollection = database.collection('Channel');
+      const serverData = await channelCollection.findOne({
+        channelName: channelName
+      })
+      socket.emit('getChannel',serverData);
+    } finally{
+      client.close();
+    }
+  })
 
   socket.on('friend', async (data) => {
     try {
