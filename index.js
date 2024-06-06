@@ -9,7 +9,7 @@ const { mongoRun } = require("./mongodb");
 const { socketInitializer } = require("./socket");
 
 const server = http.createServer(app);
-server.listen(3001, async() => {
+server.listen(3001, async () => {
   await mongoRun();
   console.log("SERVER IS RUNNING ON PORT 3001");
 });
@@ -20,7 +20,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-io.on("connection", socketInitializer)
+io.on("connection", (socket) => { socketInitializer(io, socket) })
 
 app.get('/', (req, res) => {
   res.send('<h1>hello express</h1>')

@@ -1,21 +1,22 @@
 const { database } = require("./mongodb");
 
+/* 몽고DB 로직 수행하는 함수모음집 */
+
 const findUser = async (username) => {
     const collection = database.collection('User');
     /* 이름 안쳤네 */
     if (username == '') {
         return {
             data: null,
-            message: '얘 이름 안쳤음.'
+            message: '이름 없음 에러.'
         }
     }
     const data = await collection.findOne({ username: username })
     /*유저 있는 경우 */
     if (data) {
-        // socket.emit('user', data);
         return {
             data: data,
-            message: 'db에서 유저 찾았음. 이건 걔 데이터임',
+            message: 'db에서 유저 찾았음.',
         };
     }
     /*유저 없는 경우 */
@@ -23,22 +24,32 @@ const findUser = async (username) => {
         const userObject = {
             username: username,
             friends: [],
-            channels: []
+            channels: [],
+            currentChannel: "",
         }
         await collection.insertOne(userObject)
         return {
             data: userObject,
             message: 'db에서 유저 없어서 새로 생성했음',
         }
-        // socket.emit('user', userObject);
     }
 }
 
-const findChannel = async (channelName) => {
+const findChannel = async (names) => {
+    const { username, channelName } = names;
     const collection = database.collection('Channel');
     const data = await collection.findOne({ channel: channelName })
+
+    /* 이름 안쳤네 */
+    if (channelName == '') {
+        return {
+            data: null,
+            message: '이름 없음 에러.'
+        }
+    }
+
+    /* 채널 있는 경우 */
     if (data) {
-        // socket.emit('channel', data);
         return {
             data: data,
             message: 'db에서 채널 찾았음 데이터 보내드림',
@@ -48,16 +59,23 @@ const findChannel = async (channelName) => {
     else {
         const channelObject = {
             channelName: channelName,
-            channelUsers: [], // 유저 이름들 배열
+            channelUsers: [`${username}`], // 유저 이름들 배열
             chattingLogs: [], // 채팅방 기록들
         }
         await collection.insertOne(channelObject)
-
+        const userCollection = database.collection('User');
+        await userCollection.updateOne(
+            { username: username }, // 찾고자 하는 조건
+            {
+                $push: { channels: channelObject },
+                $set: { currentChannel: channelName },
+            } // channels 배열에 channelObject 추가
+        )
+        const userData = await userCollection.findOne({ username: username })
         return {
-            data: channelObject,
+            data: userData,
             message: 'db에 채널 없음 . 새로 생성함',
         };
-        // socket.emit('channel', channelObject);
     }
 }
 
@@ -71,34 +89,37 @@ const findFriend = async (data) => {
     if (dbData) {
         return {
             data: data,
-            message: '친구 있음 추가 없음',
+            message: '친구 있음',
         };
     }
     else {
         await collection.updateOne(
             { username: data.username },
+
             { $push: { friends: data.friendName } })
         return {
             data: data,
             message: '친구 없었음. 새로 생성함',
         };
-        // socket.emit('channel', channelObject);
     }
 }
 
 const channelUpdate = async (data) => {
     const { username, channelName } = data;
     const channelCollection = database.collection('Channel');
+    const userCollection = database.collection('User');
     if (username && channelName) {
         await channelCollection.updateOne(
             { channelName: channelName }, // 채널 이름이 일치하는 문서 찾기
             { $push: { channelUsers: username } } // channelUsers 배열에 username 추가
         )
-        const userCollection = database.collection('User');
         await userCollection.updateOne(
             { username: username },
-            { $push: { channels: channelName } }
-        )
+            {
+                $set: { currentChannel: channelName },
+                $push: { channels: channelName }
+            }
+        );
         const foundData = await channelCollection.findOne({ channelName: channelName });
         return {
             data: foundData,
@@ -112,10 +133,40 @@ const channelUpdate = async (data) => {
         }
     }
 }
+const getChannel = async(channelName) =>{
+    const channelCollection = database.collection('Channel');
+    const foundData = await channelCollection.findOne({ channelName: channelName });
+    if(foundData){
+        return{
+            data:foundData,
+            message:'찾았음'
+        }
+    }
+    else{
+        return{
+            data:null,
+            message:'못찾았음'
+        }
+    }
+}
+
+const messageService = async(data)=>{
+    const {room,text,username,time} = data;
+    const channelCollection = database.collection('Channel');
+    await channelCollection.updateOne(
+        { channelName: room },
+        {
+            $push: { chattingLogs: data }
+        }
+    );
+
+}
 
 module.exports = {
     findUser,
     findChannel,
     findFriend,
-    channelUpdate
+    channelUpdate,
+    getChannel,
+    messageService
 }

@@ -1,6 +1,8 @@
 const { MongoClient, ServerApiVersion } = require('mongodb')
 const { MONGO_URI } = require('./constant');
 
+
+/* Mongodb 객체임 */
 const client = new MongoClient(MONGO_URI, {
     serverApi: {
         version: ServerApiVersion.v1,
