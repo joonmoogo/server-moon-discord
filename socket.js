@@ -12,13 +12,13 @@ const socketInitializer = (io, socket) => {
     // 유저 로그인할 때
     socket.on('disconnect', () => disconnectHandler(io, socket));
     // 유저 로그아웃할 때 
-    socket.on('channel', (data) => { channelHandler(socket, data) })
+    socket.on('channel', (data) => { channelHandler(io, socket, data) })
     // 채널 생성할 때
-    socket.on('channelJoin', (data) => { channelJoinHandler(socket, data) })
+    socket.on('channelJoin', (data) => { channelJoinHandler(io, socket, data) })
     // 채널 입장할 때
-    socket.on('getChannel', (data) => { getChannelHandler(socket, data) })
+    socket.on('getChannel', (data) => { getChannelHandler(io, socket, data) })
     // 채널 가져오기 요청
-    socket.on('friend', (data) => { friendHandler(socket, data) })
+    socket.on('friend', (data) => { friendHandler(io, socket, data) })
     // 친구 추가
 
     /*
