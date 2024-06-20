@@ -1,4 +1,4 @@
-const onlineUsers = require("../SingletonUsers");
+const onlineUsers = require("../GlobalStates/SingletonUsers");
 const { findUser, channelUpdate, findChannel, getChannel, messageService } = require("../Repository/mongodbHandler");
 
 /* 각 요청 이벤트 핸들러들임 */

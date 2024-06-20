@@ -1,4 +1,4 @@
-const { database } = require("../mongodb");
+const { database } = require("../Util/mongodb");
 
 /* 몽고DB 로직 수행하는 함수모음집 */
 

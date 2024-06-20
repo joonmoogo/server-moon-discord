@@ -1,5 +1,5 @@
 const { MongoClient, ServerApiVersion } = require('mongodb')
-const { MONGO_URI } = require('./constant');
+const { MONGO_URI } = require('../constant');
 
 
 /* Mongodb 객체임 */
