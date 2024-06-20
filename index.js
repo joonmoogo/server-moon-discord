@@ -7,10 +7,8 @@ require("dotenv").config();
 app.use(cors());
 const { mongoRun } = require("./Util/mongodb");
 const { socketInitializer } = require("./Controller/socket");
-const { CLIENT_URL_DEV, SERVER_PORT } = require("./constant");
+const { CLIENT_URL_DEV, SERVER_PORT, IS_PRODUCTION } = require("./constant");
 const path = require("path");
-
-app.use(express.static( path.join(__dirname, '/dist')))
 
 const server = http.createServer(app);
 server.listen(SERVER_PORT, async () => {
@@ -26,7 +24,9 @@ const io = new Server(server, {
 });
 io.on("connection", (socket) => { socketInitializer(io, socket) })
 
-app.get('/', (request, response) => {
-  response.sendFile(__dirnamem, '/index.html')
-})
+if (IS_PRODUCTION) app.use(express.static(path.join(__dirname, '/dist')))
 
+app.get('/', (request, response) => {
+  const obj = { name: 'moon-discord', port: SERVER_PORT }
+  response.json(obj);
+})
