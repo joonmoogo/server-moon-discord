@@ -1,12 +1,10 @@
-const { messageHandler, userHandler, channelHandler, channelJoinHandler, getChannelHandler, friendHandler, disconnectHandler } = require("./socketHandler");
+const { messageHandler, userHandler, channelHandler, channelJoinHandler, getChannelHandler, friendHandler, disconnectHandler } = require("../Service/socketHandler");
 
 /* socket 요청 받는 이벤트들임 */
 const socketInitializer = (io, socket) => {
     console.log(`User Connected: ${socket.id}`)
 
-    socket.on('message', (data) => {
-        messageHandler(io, socket, data)
-    });
+    socket.on('message', (data) => { messageHandler(io, socket, data) });
     // 메세지 주고 받기
     socket.on('user', (data) => { userHandler(io, socket, data) });
     // 유저 로그인할 때

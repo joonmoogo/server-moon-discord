@@ -1,5 +1,5 @@
-const onlineUsers = require("./SingletonUsers");
-const { findUser, channelUpdate, findChannel, getChannel, messageService } = require("./mongodbHandler");
+const onlineUsers = require("../SingletonUsers");
+const { findUser, channelUpdate, findChannel, getChannel, messageService } = require("../Repository/mongodbHandler");
 
 /* 각 요청 이벤트 핸들러들임 */
 const messageHandler = async (io, socket, data) => {

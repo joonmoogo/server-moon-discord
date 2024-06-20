@@ -1,4 +1,4 @@
-const { database } = require("./mongodb");
+const { database } = require("../mongodb");
 
 /* 몽고DB 로직 수행하는 함수모음집 */
 
@@ -95,7 +95,7 @@ const findChannel = async (names) => {
         const userData = await userCollection.findOne({ username: username })
         return {
             data: userData,
-            message: 'db에 채널 없음 . 새로 생성함',
+            message: 'db에 채널 없음 . 새로 생성함', 
         };
     }
 }

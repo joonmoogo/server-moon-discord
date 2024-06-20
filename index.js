@@ -6,7 +6,7 @@ const cors = require('cors')
 require("dotenv").config();
 app.use(cors());
 const { mongoRun } = require("./mongodb");
-const { socketInitializer } = require("./socket");
+const { socketInitializer } = require("./Controller/socket");
 
 const server = http.createServer(app);
 server.listen(3001, async () => {
