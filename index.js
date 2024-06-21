@@ -18,7 +18,7 @@ server.listen(SERVER_PORT, async () => {
 
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL_DEV,
+    origin: '/',
     methods: ["GET", "POST"],
   },
 });
