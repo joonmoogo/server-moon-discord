@@ -1,4 +1,4 @@
-const onlineUsers = require("../GlobalStates/SingletonUsers");
+const onlineUsers = require("../GlobalStates/onlineUsers");
 const {
     messageHandler,
     userHandler,
