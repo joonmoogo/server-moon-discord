@@ -40,6 +40,7 @@ const findChannel = async (names) => {
     const channelCollection = database.collection('Channel');
     const userCollection = database.collection('User');
 
+    // 채널 찾았어
     const data = await channelCollection.findOne({ channelName: channelName })
 
     /* 이름 안쳤네 */
@@ -61,7 +62,7 @@ const findChannel = async (names) => {
                 { username: username },
                 {
                     $push: { channels: channelName },
-                    $set: { currentChannel: channelName },
+                    // $set: { currentChannel: channelName },
                 }
             )
             await channelCollection.updateOne(
@@ -89,13 +90,13 @@ const findChannel = async (names) => {
             { username: username }, // 찾고자 하는 조건
             {
                 $push: { channels: channelName },
-                $set: { currentChannel: channelName },
+                // $set: { currentChannel: channelName },
             } // channels 배열에 channelObject 추가
         )
         const userData = await userCollection.findOne({ username: username })
         return {
             data: userData,
-            message: 'db에 채널 없음 . 새로 생성함', 
+            message: 'db에 채널 없음 . 새로 생성함',
         };
     }
 }
@@ -110,13 +111,12 @@ const findFriend = async (data) => {
     if (dbData) {
         return {
             data: data,
-            message: '친구 있음',
+            message: '친구 이미 있음',
         };
     }
     else {
         await collection.updateOne(
             { username: data.username },
-
             { $push: { friends: data.friendName } })
         return {
             data: data,
@@ -154,12 +154,21 @@ const channelUpdate = async (data) => {
         }
     }
 }
-const getChannel = async (channelName) => {
+const getChannel = async (data) => {
+    const { username, channelName } = data;
     const channelCollection = database.collection('Channel');
-    const foundData = await channelCollection.findOne({ channelName: channelName });
-    if (foundData) {
+    const userCollection = database.collection('User');
+    const channelData = await channelCollection.findOne({ channelName: channelName });
+    await userCollection.updateOne(
+        { username: username },
+        {
+            $set: { currentChannel: channelName },
+        }
+    );
+    const userData = await userCollection.findOne({ username: username })
+    if (userData && channelData) {
         return {
-            data: foundData,
+            data: { userData: userData, channelData: channelData },
             message: '찾았음'
         }
     }
@@ -180,6 +189,7 @@ const messageService = async (data) => {
             $push: { chattingLogs: data }
         }
     );
+    return channelCollection.findOne({channelName:room})
 
 }
 

@@ -1,5 +1,5 @@
 const onlineUsers = require("../GlobalStates/SingletonUsers");
-const { findUser, channelUpdate, findChannel, getChannel, messageService } = require("../Repository/mongodbHandler");
+const { findUser, channelUpdate, findChannel, getChannel, messageService, findFriend } = require("../Repository/mongodbHandler");
 
 /* 각 요청 이벤트 핸들러들임 */
 const messageHandler = async (io, socket, data) => {
@@ -40,16 +40,33 @@ const disconnectHandler = async (io, socket) => {
 
 /* 채널을 생성하는 경우 */
 const channelHandler = async (io, socket, data) => {
+    console.log(data);
     const channelData = await findChannel(data);
     console.log(channelData)
     if (channelData.data != null) socket.emit('channel', channelData.data)
 }
 
-/**
- * @depriciated
- */
 const channelJoinHandler = async (io, socket, data) => {
     console.log(data);
+    onlineUsers.userEnterRoom(socket.id, data.channelName);
+
+    const dbData = await getChannel(data);
+    console.log('dbData: ', dbData);
+    const rooms = Object.keys(socket.rooms);
+    console.log('Current rooms:', rooms);
+    socket.leaveAll();
+    socket.join(data.channelName);
+    socket.join(socket.id);
+    console.log('Updated rooms', socket.rooms);
+    if (dbData.data != null) {
+        socket.emit('channelJoin', dbData.data);
+    }
+};
+
+
+const channelLeaveHandler = async (io, socket, data) => {
+    console.log(data);
+    onlineUsers.userEnterRoom(socket.id, data.channelName);
     const dbData = await channelUpdate(data);
     console.log('dbData: ', dbData);
     if (dbData.data != null) {
@@ -68,10 +85,35 @@ const getChannelHandler = async (io, socket, data) => {
 }
 
 const friendHandler = async (io, socket, data) => {
-    const friendData = await findFriend(data);
-    console.log(friendData);
-    if (friendData.data != null) socket.emit('friendComplete', friendData)
+    const socketId = data;
+    io.to(socketId).emit('friendRequest', { type: 1, message: "친구 요청받음", socketId: socketId });
 }
+
+const acceptFriendHandler = async (io, socket, data) => {
+    // const friendData = await findFriend(data);
+    // console.log(friendData);
+    console.log(data);
+}
+
+const inviteChannelHandler = async (io, socket, data) => {
+    const socketId = data;
+    io.to(socketId).emit('inviteChannelRequest', { type: 2, message: "채널 초대받음", socketId: socketId });
+}
+
+const acceptInviteChannelHandler = async (io, socket, data) => {
+    console.log(data);
+}
+
+
+const personalChattingHandler = async (io, socket, data) => {
+    const socketId = data;
+    io.to(socketId).emit('personalChattingRequest', { type: 3, message: "채팅 요청받음", socketId: socketId });
+}
+
+const acceptPersonalChattingHandler = async (io, socket, data) => {
+    console.log(data);
+}
+
 
 
 
@@ -80,7 +122,13 @@ module.exports = {
     userHandler,
     channelHandler,
     channelJoinHandler,
+    channelLeaveHandler,
     friendHandler,
     getChannelHandler,
     disconnectHandler,
+    acceptFriendHandler,
+    inviteChannelHandler,
+    acceptInviteChannelHandler,
+    personalChattingHandler,
+    acceptPersonalChattingHandler,
 }

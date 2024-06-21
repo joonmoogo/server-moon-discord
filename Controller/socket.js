@@ -1,4 +1,19 @@
-const { messageHandler, userHandler, channelHandler, channelJoinHandler, getChannelHandler, friendHandler, disconnectHandler } = require("../Service/socketHandler");
+const onlineUsers = require("../GlobalStates/SingletonUsers");
+const {
+    messageHandler,
+    userHandler,
+    channelHandler,
+    channelJoinHandler,
+    getChannelHandler,
+    friendHandler,
+    disconnectHandler,
+    channelLeaveHandler,
+    acceptFriendHandler,
+    inviteChannelHandler,
+    acceptInviteChannelHandler,
+    personalChattingHandler,
+    acceptPersonalChattingHandler
+} = require("../Service/socketHandler");
 
 /* socket 요청 받는 이벤트들임 */
 const socketInitializer = (io, socket) => {
@@ -14,10 +29,23 @@ const socketInitializer = (io, socket) => {
     // 채널 생성할 때
     socket.on('channelJoin', (data) => { channelJoinHandler(io, socket, data) })
     // 채널 입장할 때
-    socket.on('getChannel', (data) => { getChannelHandler(io, socket, data) })
+    socket.on('channelLeave', (data) => { channelLeaveHandler(io, socket, data) })
+
     // 채널 가져오기 요청
+    socket.on('getChannel', (data) => { getChannelHandler(io, socket, data) })
+
+    //친구 추가 요청
     socket.on('friend', (data) => { friendHandler(io, socket, data) })
-    // 친구 추가
+    socket.on('acceptFriend', (data) => { acceptFriendHandler(io, socket, data) })
+
+    //채널 초대 요청
+    socket.on('inviteChannel', (data) => { inviteChannelHandler(io, socket, data) })
+    socket.on('acceptInviteChannel', (data) => { acceptInviteChannelHandler(io, socket, data) })
+
+    //개인 채팅 요청
+    socket.on('personalChatting', (data) => { personalChattingHandler(io, socket, data) })
+    socket.on('acceptPersonalChatting', (data) => { acceptPersonalChattingHandler(io, socket, data) })
+
 
     /*
         TODO
